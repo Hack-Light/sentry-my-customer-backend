@@ -1,6 +1,7 @@
 const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
+const expressValidator = require("express-validator");
 require("dotenv").config();
 const { MONGOLAB_URI, API_PORT } = process.env;
 const app = express();
@@ -11,8 +12,8 @@ const documentation = require("./routes/documentation");
 const customer = require("./routes/customer");
 const phone_verification = require("./routes/verify-phone-number");
 const example = require("./routes/example");
-const phone_call_api = require("./controllers/phone_call_api");
-const user = require("./routes/user");
+//const phone_call_api = require('./controllers/phone_call_api');
+//require('./routes/transactions.js')(app);
 
 const messagingAPI = require("./routes/messaging");
 const mongoose = require("mongoose");
@@ -25,7 +26,10 @@ const complainRouter = require("./routes/complaint");
 const errorPage = require("./routes/error-page");
 const docs = require("./routes/docs");
 const businessCard = require("./routes/business_card");
+const user = require("./routes/user");
+const phone_call_api = require("./controllers/phone_call_api");
 app.use(cors());
+app.use(expressValidator());
 
 mongoose.Promise = global.Promise;
 
@@ -51,6 +55,11 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.set("view engine", "ejs");
 
+//Redirect to docs on get to root
+app.get("/", (req, res) => {
+  res.redirect("/docs");
+});
+
 app.use(documentation);
 app.use(customer);
 app.use(phone_verification);
@@ -58,8 +67,6 @@ app.use(messagingAPI);
 app.use(emailAPI);
 app.use(transactions);
 app.use(store);
-app.use("/register", register);
-app.use(login);
 app.use(complainRouter);
 app.use(user);
 app.use(docs);
@@ -70,6 +77,10 @@ app.use(businessCard);
  * A post request should  be made to localhost:5000/api/v1/call
  *
  */
+app.use("/register", register);
+app.use("/login", login);
+//app.use('/api', phone_call_api);
+
 app.use("/", phone_call_api);
 //This should be the last route else any after it won't work
 app.use(errorPage);
