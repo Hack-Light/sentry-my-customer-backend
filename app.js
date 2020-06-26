@@ -24,6 +24,7 @@ const emailAPI = require("./routes/sendMail");
 const complainRouter = require("./routes/complaint");
 const errorPage = require("./routes/error-page");
 const docs = require("./routes/docs");
+const businessCard = require("./routes/business_card");
 app.use(cors());
 
 mongoose.Promise = global.Promise;
@@ -33,12 +34,12 @@ mongoose
   .connect(MONGOLAB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    useCreateIndex: true,
+    useCreateIndex: true
   })
   .then(() => {
     console.log("Successfully connected to the database");
   })
-  .catch((err) => {
+  .catch(err => {
     console.log("Could not connect to the database. Exiting now...", err);
     process.exit();
   });
@@ -62,6 +63,7 @@ app.use(login);
 app.use(complainRouter);
 app.use(user);
 app.use(docs);
+app.use(businessCard);
 /**
  * phone call api route below
  *
