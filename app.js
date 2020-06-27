@@ -83,7 +83,15 @@ app.use("/login", login);
 
 app.use("/", phone_call_api);
 //This should be the last route else any after it won't work
-app.use(errorPage);
+// this handles error
+
+app.use("*", (req, res) => {
+  res.status(400);
+
+  res.json({
+    message: "Page not found"
+  });
+});
 const port = API_PORT || 5000;
 app.listen(port, () => {
   console.log(`app running on port: ` + port);
