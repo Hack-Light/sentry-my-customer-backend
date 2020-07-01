@@ -1,21 +1,22 @@
 const jwt = require("jsonwebtoken");
 const bCrypt = require("bcryptjs");
-const { body } = require('express-validator/check');
+const { body } = require("express-validator/check");
 const passport = require("passport");
 
 const UserModel = require("../models/store_admin");
 const CustomerModel = require("../models/customer");
 
-exports.validate = (method) => {
+exports.validate = method => {
   switch (method) {
-      case 'login': {
-          return [
-              body('phone_number').isInt(),
-              body('password').matches(/^[0-9a-zA-Z]{6,}$/, "i"),
-          ]
-      }
+    case "login": {
+      return [
+        body("phone_number").isInt(),
+        // /W is used to match any non-word character except _
+        body("password").matches(/^[0-9a-zA-Z_/\W]{6,}$/, "i")
+      ];
+    }
   }
-}
+};
 
 //  Login User
 module.exports.loginUser = async (req, res, next) => {
@@ -29,22 +30,22 @@ module.exports.loginUser = async (req, res, next) => {
 
   //  Check if the users phone persists in the DB
   await UserModel.findOne({ identifier: user.identifier })
-    .then((userExist) => {
+    .then(userExist => {
       if (userExist) {
         //  Go ahead to compare the password match.
         bCrypt
           .compare(user.local.password, userExist.local.password)
-          .then((doPasswordMatch) => {
+          .then(doPasswordMatch => {
             if (doPasswordMatch) {
               //  Generate a login api_token for subsequent authentication.
               const apiToken = jwt.sign(
                 {
                   phone_number: userExist.local.phone_number,
-                  password: user.local.password,
+                  password: user.local.password
                 },
                 process.env.JWT_KEY,
                 {
-                  expiresIn: "1h",
+                  expiresIn: "1h"
                 }
               );
               res.status(200).json({
@@ -53,7 +54,7 @@ module.exports.loginUser = async (req, res, next) => {
                 data: {
                   statusCode: 200,
                   user: userExist
-                },
+                }
               });
             } else {
               res.status(401).json({
@@ -66,7 +67,7 @@ module.exports.loginUser = async (req, res, next) => {
               });
             }
           })
-          .catch((error) => {
+          .catch(error => {
             res.status(500).json({
               success: false,
               message: "Invalid Password.",
@@ -87,9 +88,9 @@ module.exports.loginUser = async (req, res, next) => {
         });
       }
     })
-    .catch((error) => {
+    .catch(error => {
       res.status(500).json({
-        Error: error,
+        Error: error
       });
     });
 };
@@ -100,7 +101,7 @@ module.exports.loginCustomer = async (req, res, next) => {
 
   const reqBody = {
     phone_number: phone_number,
-    name: name,
+    name: name
   };
 
   //Validate the "reqBody" object using joiValidator function imported.
@@ -110,29 +111,29 @@ module.exports.loginCustomer = async (req, res, next) => {
   //  Check if there is any validation error.
   if (error) {
     return res.status(400).json({
-      Error: error.details[0].message,
+      Error: error.details[0].message
     });
   }
 
   //  Get instance of the
   const user = CustomerModel({
     name: value.name,
-    phone_number: value.phone_number,
+    phone_number: value.phone_number
   });
 
   //  Check if the users phone persists in the DB
   await CustomerModel.findOne({ phone_number: user.phone_number })
-    .then((userExist) => {
+    .then(userExist => {
       if (userExist) {
         //  Go ahead to generate a login api_token for subsequent authentication..
         const apiToken = jwt.sign(
           {
             phone_number: userExist.phone_number,
-            name: userExist.name,
+            name: userExist.name
           },
           process.env.JWT_KEY,
           {
-            expiresIn: "1h",
+            expiresIn: "1h"
           }
         );
 
@@ -143,28 +144,28 @@ module.exports.loginCustomer = async (req, res, next) => {
           user: {
             _id: userExist._id,
             phone_number: userExist.phone_number,
-            name: userExist.name,
-          },
+            name: userExist.name
+          }
         });
       } else {
         res.json({
           Message: "Invalid phone number.",
-          Status: false,
+          Status: false
         });
       }
     })
-    .catch((error) => {
+    .catch(error => {
       res.status(500).json({
-        Error: error,
+        Error: error
       });
     });
 };
 
 //Sign in with facebook
-module.exports.fbLogin = passport.authenticate('facebook');
+module.exports.fbLogin = passport.authenticate("facebook");
 
 module.exports.fbLoginCallback = function (req, res) {
-  if ( !req.user ) {
+  if (!req.user) {
     res.status(401).send({
       success: false,
       message: "Login with facebook failed",
@@ -182,6 +183,6 @@ module.exports.fbLoginCallback = function (req, res) {
       }
     });
   }
-}
+};
 
 module.exports.login;
