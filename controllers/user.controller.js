@@ -1,4 +1,4 @@
-const User = require("../models/store_admin");
+const storeAssistant = require("../models/storeAssistant");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { body, validationResult } = require("express-validator/check");
@@ -8,7 +8,8 @@ exports.validate = method => {
     case "body": {
       return [
         body("phone_number").isInt(),
-        body("password").matches(/^[0-9a-zA-Z]{6,}$/, "i")
+        // added regex for special characters
+        body("password").matches(/^[0-9a-zA-Z_/\W]{6,}$/, "i")
       ];
     }
   }
@@ -59,8 +60,11 @@ exports.new = async (req, res) => {
     }
   );
 
-  const newUser = new User({
+  const newUser = new storeAssistant({
+    first_name: first_name,
+    last_name: last_name,
     phone_number: phone_number,
+    email: email,
     token: token
   });
 
@@ -70,7 +74,9 @@ exports.new = async (req, res) => {
   newUser.password = await bcrypt.hash(password, salt);
 
   // Check if Phone exists
-  const userExists = await User.findOne({ phone_number: newUser.phone_number });
+  const userExists = await storeAssistant.findOne({
+    phone_number: newUser.phone_number
+  });
 
   if (userExists) {
     return res.status(409).json({
@@ -100,7 +106,7 @@ exports.new = async (req, res) => {
         if (err) throw err;
         res.status(201).json({
           success: "true",
-          message: "User created successfully",
+          message: "Store assistant created successfully",
           data: {
             token,
             newUser
@@ -153,7 +159,6 @@ exports.getById = (req, res) => {
 
 exports.update = async (req, res) => {
   // Build data based on fields to be submited
-  // const userFields =;
 
   try {
     let user = await User.findById(req.params.user_id);
