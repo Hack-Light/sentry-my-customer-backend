@@ -11,7 +11,7 @@ const cloudConfig = require("../controllers/cloudinaryController").cloudConfig;
 router.use("/assistant", auth);
 
 // retrieve all users - this is a super admin privilege
-router.get("/users/all", auth, users.getAllStoreAdmin);
+router.get("/store-admin/all", auth, users.getAllStoreAdmin);
 
 //Add new StoreAdmin
 router.post(
